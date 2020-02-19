@@ -1,6 +1,4 @@
-from collections import deque
 from imutils.video import VideoStream
-import numpy as np
 import cv2
 import imutils
 import time
@@ -8,9 +6,10 @@ from os import listdir
 from os.path import isfile, join
 import json
 from networktables import NetworkTables
+import math
 
-yellowLower = (15, 160, 60)
-yellowUpper = (30, 255, 255)
+yellowLower = (25, 160, 70)
+yellowUpper = (40, 255, 255)
 
 vs = VideoStream(src=0).start()
 
@@ -21,15 +20,15 @@ files = [f for f in listdir("./images") if isfile(join('./images', f))]
 NetworkTables.initialize(server='roborio-4795-frc.local')
 sd = NetworkTables.getTable('SmartDashboard')
 
-while True:#for file in files:
+for file in files:
 	frame = vs.read()
-	'''frame = cv2.imread('./images/' + file)#frame[1] if args.get("video", False) else frame
+	frame = cv2.imread('./images/' + file)
 	data = False
 	with open('./labels/' + file + '.json', "r") as read_file:
 		data = json.load(read_file)
 
 	if len(data['objects']) == 0:
-		continue'''
+		continue
 
 	if frame is None:
 		break
@@ -37,6 +36,7 @@ while True:#for file in files:
 	frame = imutils.resize(frame, width=600)
 	blurred = cv2.GaussianBlur(frame, (11, 11), 0)
 	hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+	#cv2.imshow("Frame", hsv)
 
 	mask = cv2.inRange(hsv, yellowLower, yellowUpper)
 	mask = cv2.erode(mask, None, iterations=3)
@@ -49,33 +49,28 @@ while True:#for file in files:
 	center = None
 	width = frame.shape[1]
 	height = frame.shape[0]
+	options = []
+	for cnt in cnts:
+		((x, y), radius) = cv2.minEnclosingCircle(cnt)
+		if cv2.contourArea(cnt) / (radius * radius * math.pi) > 0.6 and radius > 20:
+			options.append(cnt)
 
-	if len(cnts) > 0:
-		c = max(cnts, key=cv2.contourArea)
-		((x, y), radius) = cv2.minEnclosingCircle(c)
-		M = cv2.moments(c)
-
-		if radius > 10:
-			cv2.circle(frame, (int(x), int(y)), int(radius),
-				(0, 255, 255), 2)
-			sd.putNumber('ball_x', int(x - width / 2))
-			sd.putNumber('ball_y', int(y - height / 2))
+	if len(options) > 0:
+		cnt = max(options, key=cv2.contourArea)
+		((x, y), radius) = cv2.minEnclosingCircle(cnt)
+		cv2.circle(frame, (int(x), int(y)), int(radius),
+			(0, 255, 255), 2)
+		sd.putNumber('ball_x', int(x - width / 2))
+		sd.putNumber('ball_y', int(y - height / 2))
+		# calc distance and angle
 
 	cv2.imshow("Frame", frame)
-	#cv2.imshow("x", mask)
+	cv2.imshow("x", mask)
 	key = cv2.waitKey(1) & 0xFF
 
 	if key == ord("v"):
 		time.sleep(15)
 
-	#time.sleep(1)
-
-# if we are not using a video file, stop the camera video stream
-if not args.get("video", False):
-	vs.stop()
-
-# otherwise, release the camera
-else:
-	vs.release()
+	time.sleep(1)
 
 cv2.destroyAllWindows()
