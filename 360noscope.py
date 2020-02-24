@@ -14,11 +14,11 @@ redLower = (0, 20, 210)
 redUpper = (10, 50, 255)
 blueLower = (70, 20, 210)
 blueUpper = (100, 50, 255)
-yellowLower = (25, 160, 60)
+yellowLower = (20, 70, 60)
 yellowUpper = (40, 255, 255)
 mode = 'ball'
 
-vs = VideoStream(src=1).start()
+vs = VideoStream(src=2).start()
 
 time.sleep(2.0)
 
@@ -88,20 +88,32 @@ while True:
         if mode == 'ball':
             ((x, y), radius) = cv2.minEnclosingCircle(cnt)
             cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 3)
-            sd.putNumber('ball_x', int(x - width / 2))
-            sd.putNumber('ball_y', int(y - height / 2))
+            sd.putNumber('ball_x', x / width * 2 - 1)
+            sd.putNumber('ball_y', y / height * 2 - 1)
+            sd.putNumber('ball_size', min(radius / width * 5, 1))
+            sd.putNumber('target_x', 0)
+            sd.putNumber('target_y', 0)
         else:
             x, y, w, h = cv2.boundingRect(cnt)
             cv2.rectangle(frame, (x, y, w, h), (0, 255, 255), 3)
-            sd.putNumber('target_x', int(x - width / 2))
-            sd.putNumber('target_y', int(x - width / 2))
+            sd.putNumber('target_x', x / width * 2 - 1)
+            sd.putNumber('target_y', y / height * 2 - 1)
+            sd.putNumber('ball_x', 0)
+            sd.putNumber('ball_y', 0)
+            sd.putNumber('ball_size', 0)
+    else:
+        sd.putNumber('ball_x', 0)
+        sd.putNumber('ball_y', 0)
+        sd.putNumber('ball_size', 0)
+        sd.putNumber('target_x', 0)
+        sd.putNumber('target_y', 0)
         # calc distance and angle
         # other angle using aspect ratio
 
     key = cv2.waitKey(1) & 0xFF
 
     cv2.imshow('Frame', frame)
-    #cv2.imshow('x', mask)
+    cv2.imshow('x', mask)
 
     #time.sleep(1)
 
