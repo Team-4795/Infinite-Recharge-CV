@@ -75,7 +75,7 @@ while True:
     for cnt in cnts:
         if mode == 'ball':
             ((x, y), radius) = cv2.minEnclosingCircle(cnt)
-            if cv2.contourArea(cnt) / (radius * radius * math.pi) > 0.5 and radius > 20:
+            if cv2.contourArea(cnt) / (radius * radius * math.pi) > 0.5 and radius > 20:# and y / height * 2 - 1 > -0.3:
                 options.append(cnt)
         else:
             x, y, w, h = cv2.boundingRect(cnt)
@@ -90,7 +90,7 @@ while True:
             cv2.circle(frame, (int(x), int(y)), int(radius), (0, 255, 255), 3)
             sd.putNumber('ball_x', x / width * 2 - 1)
             sd.putNumber('ball_y', y / height * 2 - 1)
-            sd.putNumber('ball_size', min(radius / width * 5, 1))
+            #sd.putNumber('ball_size', min(radius / width * 5, 1))
             sd.putNumber('target_x', 0)
             sd.putNumber('target_y', 0)
         else:
@@ -100,15 +100,13 @@ while True:
             sd.putNumber('target_y', y / height * 2 - 1)
             sd.putNumber('ball_x', 0)
             sd.putNumber('ball_y', 0)
-            sd.putNumber('ball_size', 0)
+            #sd.putNumber('ball_size', 0)
     else:
         sd.putNumber('ball_x', 0)
         sd.putNumber('ball_y', 0)
-        sd.putNumber('ball_size', 0)
+        #sd.putNumber('ball_size', 0)
         sd.putNumber('target_x', 0)
         sd.putNumber('target_y', 0)
-        # calc distance and angle
-        # other angle using aspect ratio
 
     key = cv2.waitKey(1) & 0xFF
 
